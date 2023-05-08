@@ -21,86 +21,97 @@ int checkInput(){
 
 struct Node{
     int key;
-    int height;
+    int height = 0;
     Node *left = nullptr;
     Node *right = nullptr;
 };
 
-int height(Node* p) {
-    if (p != nullptr) {
-        return p->height;
+int height(Node* node) {
+    if (node != nullptr) {
+        return node->height;
     } else {
         return 0;
     }
 }
 
-int balance_factor(Node* p) {
-    if (p == nullptr) {
+int balanceFactor(Node* node) {
+    if (node == nullptr) {
         return 0;
     } else {
-        return (height(p->right) - height(p->left));
+        return (height(node->right) - height(node->left));
     }
 }
 
-void fix_height(Node* p) {
-    int h_left = height(p->left);
-    int h_right = height(p->right);
-    if (h_left > h_right) {
-        p->height = h_left + 1;
+void fixHeight(Node* node) {
+    int left = height(node->left);
+    int right = height(node->right);
+    if (left > right) {
+        node->height = left + 1;
     } else {
-        p->height = h_right + 1;
+        node->height = right + 1;
     }
 }
 
-Node* RotateLeft(Node* tree) {
-    Node* p = tree->right;
-    tree->right = p->left;
-    p->left = tree;
-    fix_height(tree);
-    fix_height(p);
+Node* rotateLeft(Node* node) {
+    Node* p = node->right;
+    node->right = p->left;
+    p->left = node;
+    fixHeight(node);
+    fixHeight(p);
     return p;
 }
 
-Node* RotateRight(Node* tree) {
-    Node* p = tree->left;
-    tree->left = p->right;
-    p->right = tree;
-    fix_height(tree);
-    fix_height(p);
+Node* rotateRight(Node* node) {
+    Node* p = node->left;
+    node->left = p->right;
+    p->right = node;
+    fixHeight(node);
+    fixHeight(p);
     return p;
 }
 
 Node* balance(Node* root) {
-    fix_height(root);
-    if (balance_factor(root) == 2) {
-        if (balance_factor(root->right) < 0) {
-            root->right = RotateRight(root->right);
+    fixHeight(root);
+    if (balanceFactor(root) == 2) {
+        if (balanceFactor(root->right) < 0) {
+            root->right = rotateRight(root->right);
         }
-        return RotateLeft(root);
+        return rotateLeft(root);
     }
-    if (balance_factor(root) == -2) {
-        if (balance_factor(root->left) > 0) {
-            root->left = RotateLeft(root->left);
+    if (balanceFactor(root) == -2) {
+        if (balanceFactor(root->left) > 0) {
+            root->left = rotateLeft(root->left);
         }
-        return RotateRight(root);
+        return rotateRight(root);
     }
     return root;
 }
-Node* insert(Node* p, int k) {
-    if (!p) {
-        Node* x = new Node;
-        x->key = k;
-        return x;
+Node* insert(Node* node, int k) {
+    if (!node) {
+        Node* newNode = new Node;
+        newNode->key = k;
+        return newNode;
     }
-    if (k < p->key) {
-        p->left = insert(p->left, k);
-    } else if (k > p->key) {
-        p->right = insert(p->right, k);
+    if (k < node->key) {
+        node->left = insert(node->left, k);
+    } else if (k > node->key) {
+        node->right = insert(node->right, k);
     }
-    return balance(p);
+    return balance(node);
 }
 
-void function1(Node *root){
+void printTree(Node* root, std::string prefix = "", bool isLeft = true) {
+    if (root == nullptr) {
+        return;
+    }
+    printTree(root->right, prefix + (isLeft ? "|   " : "    "), false);
+    std::cout << prefix;
+    std::cout << (isLeft ? "\\--" : "/--");
+    std::cout << root->key << std::endl;
+    printTree(root->left, prefix + (isLeft ? "|   " : "    "), true);
+}
+
+void function1(Node *&root){
     cout << "Which type of input do you prefer(1 - random, 2 - ourselves): ";
     int inputType = checkInput();
     int size;
@@ -114,21 +125,26 @@ void function1(Node *root){
         }
         srand(time(NULL));
         for(int i = 0; i < size; i++){
-            insert(root, rand() % 199 - 99);
+            root = insert(root, rand() % 199 - 99);
         }
     }else if(inputType == 2){
         cout << "Input list: \n";
         getline(cin, stringList);
-
+        istringstream iss(stringList);
+        int num;
+        while (iss >> num) {
+            root = insert(root, num);
+        }
     }else{
         cout << "Wrong input! Try again.\n";
         function1(root);
     }
-
 }
 
 int main() {
-    Node *root = new Node;
+    Node *root = nullptr;
     function1(root);
+    printTree(root);
+    getchar();
     return 0;
 }
