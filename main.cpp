@@ -22,7 +22,7 @@ int checkInput(){
 
 struct Node{
     int key;
-    int height = 0;
+    int height = 1;
     Node *left = nullptr;
     Node *right = nullptr;
 };
@@ -101,14 +101,14 @@ Node* insert(Node* node, int k) {
     return balance(node);
 }
 
-Node* search(Node *node, int k, stack<Node> stack){
+Node* search(Node *node, int k, stack<Node*> &stack){
     if(!node){
         return nullptr;
     }else{
-        stack.push(*node);
         if(k == node->key){
             return node;
         }
+        stack.push(node);
         if(k > node->key){
             return search(node->right, k, stack);
         }else{
@@ -117,28 +117,60 @@ Node* search(Node *node, int k, stack<Node> stack){
     }
 }
 
-Node* getMax(Node *node, stack<Node> stack){
+Node* getMax(Node *node, stack<Node*> &stack){
+    Node *prev = node;
     while (node->right) {
-        stack.push(*node);
+        stack.push(node);
+        prev = node;
         node = node->right;
     }
-    Node *outPut = node;
     //надо написать, чтобы максимальный элемент удалялся и у его родителя->right = null
+    if(node->left && node != prev){
+        prev->right = node->left;
+    }else{
+        prev->right = nullptr;
+    }
     return node;
 }
 
 Node* deleteNode(Node *node, int k){
-    stack<Node> stack;
+    stack<Node*> stack;
     Node *deleteElement = search(node, k, stack);
     if(deleteElement){
-        if(deleteElement->left){
-            swap(deleteElement->key, getMax(deleteElement->left, stack)->key);
-
+        if(deleteElement->left && deleteElement->right){
+            stack.push(deleteElement);
+            Node *max = getMax(deleteElement->left, stack);
+            if(deleteElement->left == max){
+                deleteElement->left = max->left;
+            }
+            deleteElement->key = max->key;
+            delete max;
+        }else if(deleteElement->left){
+            stack.top()->left = deleteElement->left;
+            delete deleteElement;
+        }else if(deleteElement->right){
+            stack.top()->right = deleteElement->right;
+            delete deleteElement;
         }else{
-
+            if(stack.top()->left == deleteElement){
+                stack.top()->left = nullptr;
+                delete deleteElement;
+            }else {
+                stack.top()->right = nullptr;
+                delete deleteElement;
+            }
         }
     }else {
         return nullptr;
+    }
+    while (!stack.empty()){
+        if(stack.size() == 1){
+            node = balance(stack.top());
+            return node;
+        }
+        Node* help = stack.top();
+        stack.pop();
+        stack.top()->left == help ? stack.top()->left : stack.top()->right = balance(help);
     }
 }
 
@@ -176,17 +208,25 @@ void function1(Node *&root){
         int num;
         while (iss >> num) {
             root = insert(root, num);
+            printTree(root);
+            cout << "\n" << "----------------------------------------------------------------------" << "\n";
         }
     }else{
         cout << "Wrong input! Try again.\n";
         function1(root);
     }
+    printTree(root);
+    label:
+    cout << "What number do you want to delete? ";
+    inputType = checkInput();
+    root = deleteNode(root, inputType);
+    printTree(root);
+    goto label;
 }
 
 int main() {
     Node *root = nullptr;
     function1(root);
-    printTree(root);
     getchar();
     return 0;
 }
