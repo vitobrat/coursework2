@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <stack>
 
 using namespace std;
 
@@ -98,6 +99,47 @@ Node* insert(Node* node, int k) {
         node->right = insert(node->right, k);
     }
     return balance(node);
+}
+
+Node* search(Node *node, int k, stack<Node> stack){
+    if(!node){
+        return nullptr;
+    }else{
+        stack.push(*node);
+        if(k == node->key){
+            return node;
+        }
+        if(k > node->key){
+            return search(node->right, k, stack);
+        }else{
+            return search(node->left, k, stack);
+        }
+    }
+}
+
+Node* getMax(Node *node, stack<Node> stack){
+    while (node->right) {
+        stack.push(*node);
+        node = node->right;
+    }
+    Node *outPut = node;
+    //надо написать, чтобы максимальный элемент удалялся и у его родителя->right = null
+    return node;
+}
+
+Node* deleteNode(Node *node, int k){
+    stack<Node> stack;
+    Node *deleteElement = search(node, k, stack);
+    if(deleteElement){
+        if(deleteElement->left){
+            swap(deleteElement->key, getMax(deleteElement->left, stack)->key);
+
+        }else{
+
+        }
+    }else {
+        return nullptr;
+    }
 }
 
 void printTree(Node* root, std::string prefix = "", bool isLeft = true) {
