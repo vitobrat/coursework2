@@ -133,6 +133,10 @@ Node* getMax(Node *node, stack<Node*> &stack){
     return node;
 }
 
+Node* balanceStack(stack<Node*> stack){
+
+}
+
 Node* deleteNode(Node *node, int k){
     stack<Node*> stack;
     Node *deleteElement = search(node, k, stack);
@@ -164,14 +168,15 @@ Node* deleteNode(Node *node, int k){
         return nullptr;
     }
     while (!stack.empty()){
-        if(stack.size() == 1){
-            node = balance(stack.top());
-            return node;
-        }
-        Node* help = stack.top();
-        stack.pop();
-        stack.top()->left == help ? stack.top()->left : stack.top()->right = balance(help);
+        Node *help = stack.top();
+       if(stack.size() == 1){
+           node = balance(stack.top());
+           break;
+       }
+       stack.pop();
+       stack.top()->left == help ? stack.top()->left = balance(help) : stack.top()->right = balance(help);
     }
+    return node;
 }
 
 void printTree(Node* root, std::string prefix = "", bool isLeft = true) {
