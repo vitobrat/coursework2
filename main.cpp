@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
 #include <stack>
+#include <fstream>
+#include <chrono>
 
 using namespace std;
 
@@ -117,6 +119,21 @@ Node* search(Node *node, int k, stack<Node*> &stack){
     }
 }
 
+Node* search(Node *node, int k){
+    if(!node){
+        return nullptr;
+    }else{
+        if(k == node->key){
+            return node;
+        }
+        if(k > node->key){
+            return search(node->right, k);
+        }else{
+            return search(node->left, k);
+        }
+    }
+}
+
 Node* getMax(Node *node, stack<Node*> &stack){
     Node *prev = node;
     while (node->right) {
@@ -131,10 +148,6 @@ Node* getMax(Node *node, stack<Node*> &stack){
         prev->right = nullptr;
     }
     return node;
-}
-
-Node* balanceStack(stack<Node*> stack){
-
 }
 
 Node* deleteNode(Node *node, int k){
@@ -165,7 +178,7 @@ Node* deleteNode(Node *node, int k){
             }
         }
     }else {
-        return nullptr;
+        return node;
     }
     while (!stack.empty()){
         Node *help = stack.top();
@@ -179,59 +192,153 @@ Node* deleteNode(Node *node, int k){
     return node;
 }
 
-void printTree(Node* root, std::string prefix = "", bool isLeft = true) {
+void printTree(Node* root, ostream& outputFile, std::string prefix = "", bool isLeft = true) {
     if (root == nullptr) {
         return;
     }
-    printTree(root->right, prefix + (isLeft ? "|   " : "    "), false);
-    std::cout << prefix;
-    std::cout << (isLeft ? "\\--" : "/--");
-    std::cout << root->key << std::endl;
-    printTree(root->left, prefix + (isLeft ? "|   " : "    "), true);
+    printTree(root->right, outputFile,  prefix + (isLeft ? "|   " : "    "), false);
+    outputFile << prefix;
+    outputFile << (isLeft ? "\\--" : "/--");
+    outputFile << root->key << endl;
+    printTree(root->left,outputFile, prefix + (isLeft ? "|   " : "    "), true);
 }
 
-void function1(Node *&root){
-    cout << "Which type of input do you prefer(1 - random, 2 - ourselves): ";
-    int inputType = checkInput();
-    int size;
-    string stringList;
-    if(inputType == 1){
-        cout << "Input size: \n";
-        size = checkInput();
-        if (size <= 0){
-            cout << "Wrong input! Try again.\n";
-            function1(root);
+void action(Node *&root, string str, int type, ofstream& output_key, ofstream& output_ans){
+    istringstream iss(str); int k;
+    while (iss >> k) {
+        switch (type) {
+            case 0:
+            case 1:
+                root = insert(root, k);
+                break;
+            case 2:
+                if (!search(root, k)) output_key << k << " is not exist!\n";
+                else{
+                    root = deleteNode(root, k);
+                }
+                break;
+            case 3:
+                if (search(root, k)) output_ans << k << " exist; ";
+                else output_ans << k << " not exist; ";
+                break;
+            default:
+                output_key << "Error input!";
         }
-        srand(time(NULL));
-        for(int i = 0; i < size; i++){
-            root = insert(root, rand() % 199 - 99);
-        }
-    }else if(inputType == 2){
-        cout << "Input list: \n";
-        getline(cin, stringList);
-        istringstream iss(stringList);
-        int num;
-        while (iss >> num) {
-            root = insert(root, num);
-            printTree(root);
-            cout << "\n" << "----------------------------------------------------------------------" << "\n";
-        }
-    }else{
-        cout << "Wrong input! Try again.\n";
-        function1(root);
+        output_key << type <<":\n";
+        printTree(root, output_key);
     }
-    printTree(root);
-    label:
-    cout << "What number do you want to delete? ";
-    inputType = checkInput();
-    root = deleteNode(root, inputType);
-    printTree(root);
-    goto label;
+    output_ans << "\n";
+    switch (type) {
+        case 0:
+            output_ans << "Tree after creation:\n";
+            break;
+        case 1:
+            output_ans << "Tree after add elements:\n";
+            break;
+        case 2:
+            output_ans << "Tree after delete elements:\n";
+            break;
+        case 3:
+            output_ans << "Final result:\n";
+            break;
+    }
+    printTree(root, output_ans);
+}
+
+void consoleMod(Node *&root){
+    cout << "Input list: \n";
+    string stringList;
+    getline(cin, stringList);
+    istringstream iss(stringList);
+    int num;
+    while (iss >> num) {
+        root = insert(root, num);
+        printTree(root, cout);
+        cout << "\n" << "----------------------------------------------------------------------" << "\n";
+    }
+    int type = 1;
+    while(type) {
+        cout << "1)Insert\n"
+                "2)Delete\n"
+                "3)Search\n"
+                "0)exit\n";
+        type = checkInput();
+        if(type == 0) break;
+        int k = checkInput();
+        switch (type){
+            case 1:
+                root = insert(root, k);
+                break;
+            case 2:
+                if (!search(root, k)) cout << k << " is not exist!\n";
+                else{
+                    root = deleteNode(root, k);
+                }
+                break;
+            case 3:
+                if(search(root, k)) cout << k << " exist;";
+                else cout << k <<  " not exist;";
+                break;
+            default:
+                cout << "Error input!";
+        }
+        cout << "\n";
+        printTree(root, cout);
+    }
+}
+
+void fileMod(Node *&root){
+    ifstream input_task("C:\\FirstCursProgramm\\C++\\coursework2\\input_task.txt");
+    ofstream output_key("C:\\FirstCursProgramm\\C++\\coursework2\\output_key.txt");
+    ofstream output_ans("C:\\FirstCursProgramm\\C++\\coursework2\\output_ans.txt");
+    if (input_task.is_open() && output_ans.is_open() && output_key.is_open()) {
+        string line, creatLine, deleteLine, addLine, searchLine;
+        for(int i = 0; i < 5; i++) getline(input_task, line);
+        while (getline(input_task, line)) {
+            getline(input_task, creatLine);
+            getline(input_task, deleteLine);
+            getline(input_task, addLine);
+            getline(input_task, searchLine);
+            auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            action(root, creatLine, 0, output_key, output_ans);
+            auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            output_key << "time spent to creat tree in nanoseconds: " << end - start << "ns\n";
+            start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            action(root, deleteLine, 2, output_key, output_ans);
+            end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            output_key << "time spent to delete elements tree in nanoseconds: " << end - start << "ns\n";
+            start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            action(root, addLine, 1, output_key, output_ans);
+            end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            output_key << "time spent to add elements tree in nanoseconds: " << end - start << "ns\n";
+            start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            action(root, searchLine, 3, output_key, output_ans);
+            end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            output_key << "time spent to search elements tree in nanoseconds: " << end - start << "ns\n";
+            output_ans << "----------------------------";
+            output_key << "----------------------------";
+            root = nullptr;
+        }
+        input_task.close();
+        output_ans.close();
+        output_key.close();
+    } else {
+        std::cout << "Could not open the file!!!" << std::endl;
+    }
 }
 
 int main() {
     Node *root = nullptr;
-    function1(root);
+    cout << "Which type of input do you prefer(1 - file, 2 - ourselves): ";
+    int inputType = checkInput();
+    if(inputType == 1){
+        fileMod(root);
+    }else if(inputType == 2){
+        consoleMod(root);
+    }else{
+        cout << "Wrong input!\n";
+        exit(1);
+    }
     getchar();
     return 0;
 }
