@@ -198,7 +198,7 @@ void printTree(Node* root, ostream& outputFile, std::string prefix = "", bool is
     }
     printTree(root->right, outputFile,  prefix + (isLeft ? "|   " : "    "), false);
     outputFile << prefix;
-    outputFile << (isLeft ? "\\--" : "/--");
+    outputFile << (isLeft ? "\\-->" : "/-->");
     outputFile << root->key << endl;
     printTree(root->left,outputFile, prefix + (isLeft ? "|   " : "    "), true);
 }
