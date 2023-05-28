@@ -120,18 +120,16 @@ Node* search(Node *node, int k, stack<Node*> &stack){
 }
 
 Node* search(Node *node, int k){
-    if(!node){
-        return nullptr;
-    }else{
-        if(k == node->key){
+    while (node != nullptr) {
+        if (k < node->key)
+            node = node->left;
+        else if (k> node->key)
+            node = node->right;
+        else {
             return node;
         }
-        if(k > node->key){
-            return search(node->right, k);
-        }else{
-            return search(node->left, k);
-        }
     }
+    return nullptr;
 }
 
 Node* getMax(Node *node, stack<Node*> &stack){
